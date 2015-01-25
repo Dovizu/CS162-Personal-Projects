@@ -15,11 +15,14 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
     int status = DELIMIT;
     while ((curr=getc(infile)) != EOF) {
         // new lines / carriage returns
-        if (curr == 10 || curr == 13) {
+        if (curr == 10 || curr == 13 || curr == 15 || curr == 12) {
             ++newlines;
         }
         if (curr == 32 || // space
             curr == 10 || // newline
+            curr == 13 || // newline
+            curr == 12 || // newline
+            curr == 15 || // newline
             curr == 9 // tab
             ) {
             status = DELIMIT;
@@ -28,7 +31,6 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
                 status = INWORD;
                 ++words;    
             }
-            
         }
         ++bytes;
     }
