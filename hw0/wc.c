@@ -26,7 +26,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         ++bytes;
     }
     // number of blank spaces + 1
-    ++words;
+    if (words != 0) ++words;
     // build result
     char *result;
     asprintf(&result, "%d\t%d\t%d\t", newlines, words, bytes);
