@@ -17,7 +17,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         if (curr == '\n') {
             ++newlines;
         }
-        if (curr == ' ' || curr == '\n' || curr == '\t' || curr == 127) {
+        if (curr == ' ' || curr == '\n' || curr == '\t' || curr == 0) {
             status = INWORD;
         } else if (status == INWORD) {
             status = OUTWORD;
@@ -25,8 +25,6 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         }
         ++bytes;
     }
-    // number of blank spaces + 1
-    // if (words != 0) ++words;
     // build result
     char *result;
     asprintf(&result, "%d\t%d\t%d\t", newlines, words, bytes);
