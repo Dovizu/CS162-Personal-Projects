@@ -17,7 +17,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         if (curr == '\n') {
             ++newlines;
         }
-        if (curr == ' ' || curr == '\n' || curr == '\t') {
+        if (curr == ' ' || curr == '\n' || curr == '\t' || curr == 127) {
             status = INWORD;
         } else if (status == INWORD) {
             status = OUTWORD;
