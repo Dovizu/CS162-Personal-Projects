@@ -2,8 +2,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#define inword 1
-#define outword 0
+#define INWORD 1
+#define OUTWORD 0
 
 void wc(FILE *ofile, FILE *infile, char *inname) {
     int bytes = 0;
@@ -12,21 +12,21 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
 
     // count newlines, bytes, and words
     char curr;
-    int status;
+    int status = INWORD;
     while ((curr=getc(infile)) != EOF) {
         if (curr == '\n') {
             ++newlines;
         }
         if (curr == ' ' || curr == '\n' || curr == '\t') {
-            status = inword;
-        } else if (status == inword) {
-            status = outword;
+            status = INWORD;
+        } else if (status == INWORD) {
+            status = OUTWORD;
             ++words;
         }
         ++bytes;
     }
     // number of blank spaces + 1
-    if (words != 0) ++words;
+    // if (words != 0) ++words;
     // build result
     char *result;
     asprintf(&result, "%d\t%d\t%d\t", newlines, words, bytes);
