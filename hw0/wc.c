@@ -9,13 +9,13 @@
 bool isNewLine(char curr) {
     return (
         curr == 10 || // LF
-        curr == 13 || // CR
-        curr == 155 || // Atari 8-bit machines
-        curr == 30 || // RS, QNX before version 4
-        curr == 21 || // EBCDIC systems
         curr == 11 || // VT vertical tab
         curr == 12 || // FF, form feed
+        curr == 13 || // CR
+        curr == 21 || // EBCDIC systems
+        curr == 30 || // RS, QNX before version 4
         curr == 133 || // NEL, next line
+        curr == 155 || // Atari 8-bit machines
         curr == 8232 || // LS, line separator
         curr == 8233 // PS, paragraph separator
         );
@@ -24,6 +24,29 @@ bool isNewLine(char curr) {
 bool isNonUnixNewLine(char curr, char last) {
     return (last == 13 && curr == 10) || // CR+LF windows
         (last == 10 && curr == 13); // Acorn BBC & RISC OS
+}
+
+bool isWhitespace(char curr) {
+    return (
+        isNewLine(curr) ||
+        curr == 9    || // character tabulation
+        curr == 32   || // space
+        curr == 160  || // no-break space
+        curr == 5760 || // ogham space mark
+        curr == 8192 || // en quad
+        curr == 8193 || // en space
+        curr == 8195 || // em space
+        curr == 8196 || // three-per-em space
+        curr == 8197 || // four-per-em space
+        curr == 8198 || // six-per-em space
+        curr == 8199 || // figure space
+        curr == 8200 || // punctuation space
+        curr == 8201 || // thin space
+        curr == 8202 || // hair space
+        curr == 8239 || // narrow non-break space
+        curr == 8287 || // medium mathematical space
+        curr == 12288   // ideographic space
+        );
 }
 
 void wc(FILE *ofile, FILE *infile, char *inname) {
@@ -40,10 +63,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         if (isNewLine(curr) && !isNonUnixNewLine(curr, last)) {
             ++newlines;
         }
-        if (isNewLine(curr) ||
-            curr == 32 || // space
-            curr == 9 // tab
-            ) {
+        if (isWhitespace(curr)) {
             status = DELIMIT;
         } else if (status == DELIMIT) {
             if (curr != 0) {
