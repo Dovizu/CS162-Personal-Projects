@@ -1,9 +1,30 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define DELIMIT 1
 #define INWORD 0
+
+bool isNewLine(char curr) {
+    return (
+        curr == 10 || // LF
+        curr == 13 || // CR
+        curr == 155 || // Atari 8-bit machines
+        curr == 30 || // RS, QNX before version 4
+        curr == 21 || // EBCDIC systems
+        curr == 11 || // VT vertical tab
+        curr == 12 || // FF, form feed
+        curr == 133 || // NEL, next line
+        curr == 8232 || // LS, line separator
+        curr == 8233 // PS, paragraph separator
+        );
+}
+
+bool isNonUnixNewLine(char curr, char last) {
+    return (last == 13 && curr == 10) || // CR+LF windows
+        (last == 10 && curr == 13); // Acorn BBC & RISC OS
+}
 
 void wc(FILE *ofile, FILE *infile, char *inname) {
     int bytes = 0;
@@ -12,17 +33,15 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
 
     // count newlines, bytes, and words
     char curr;
+    char last = 0;
     int status = DELIMIT;
     while ((curr=getc(infile)) != EOF) {
         // new lines / carriage returns
-        if (curr == 10 || curr == 13 || curr == 15 || curr == 12) {
+        if (isNewLine(curr) && !isNonUnixNewLine(curr, last)) {
             ++newlines;
         }
-        if (curr == 32 || // space
-            curr == 10 || // newline
-            curr == 13 || // newline
-            curr == 12 || // newline
-            curr == 15 || // newline
+        if (isNewLine(curr) ||
+            curr == 32 || // space
             curr == 9 // tab
             ) {
             status = DELIMIT;
@@ -33,6 +52,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
             }
         }
         ++bytes;
+        last = curr;
     }
     // build result
     char *result;
