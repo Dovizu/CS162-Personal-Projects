@@ -61,7 +61,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
     int status = DELIMIT;
     while ((curr=getc(infile)) != EOF) {
         // new lines / carriage returns
-        if (isNewLine(curr) && !isNonUnixNewLine(curr, last)) {
+        if (isNewLine(curr)) {
             ++newlines;
         }
         if (isspace(curr)) {
