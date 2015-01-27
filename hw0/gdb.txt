@@ -1,0 +1,71 @@
+== What is the value of infile ==
+0x602010
+
+== What is the object referenced by infile? ==
+a FILE object that looks like
+{_flags = -72539000, _IO_read_ptr = 0x0, _IO_read_end = 0x0, 
+  _IO_read_base = 0x0, _IO_write_base = 0x0, _IO_write_ptr = 0x0, 
+  _IO_write_end = 0x0, _IO_buf_base = 0x0, _IO_buf_end = 0x0, 
+  _IO_save_base = 0x0, _IO_backup_base = 0x0, _IO_save_end = 0x0, 
+  _markers = 0x0, _chain = 0x7ffff7dd41c0 <_IO_2_1_stderr_>, _fileno = 3, 
+  _flags2 = 0, _old_offset = 0, _cur_column = 0, _vtable_offset = 0 '\000', 
+  _shortbuf = "", _lock = 0x6020f0, _offset = -1, __pad1 = 0x0, 
+  __pad2 = 0x602100, __pad3 = 0x0, __pad4 = 0x0, __pad5 = 0, _mode = 0, 
+  _unused2 = '\000' <repeats 19 times>}
+
+== What is the value of ofile? How is it different from that of infile? Why? ==
+0x7ffff7dd4400 <_IO_2_1_stdout_>, it points to stdout
+
+== What is the address of the function wc? ==
+0x40081b
+
+== Try info stack. Explain what you see. ==
+#0  wc (ofile=0x7ffff7dd4400 <_IO_2_1_stdout_>, infile=0x602010, 
+    inname=0x7fffffffe850 "justEOL.txt") at wc.c:54
+#1  0x00000000004009f6 in main (argc=2, argv=0x7fffffffe608) at wc.c:99
+
+You see two functions, the main function and the wc function
+
+== Try info frame. Explain what you see. ==
+Stack level 0, frame at 0x7fffffffe4f0:
+ rip = 0x40082f in wc (wc.c:54); saved rip = 0x4009f6
+ called by frame at 0x7fffffffe530
+ source language c.
+ Arglist at 0x7fffffffe4e0, args: ofile=0x7ffff7dd4400 <_IO_2_1_stdout_>, 
+    infile=0x602010, inname=0x7fffffffe850 "justEOL.txt"
+ Locals at 0x7fffffffe4e0, Previous frame's sp is 0x7fffffffe4f0
+ Saved registers:
+  rbp at 0x7fffffffe4e0, rip at 0x7fffffffe4e8
+
+frame stores all the information within the current scope
+
+Try info registers. Which registers are holding aspects of the program that you recognize?
+
+rax            0x7ffff7dd4400   140737351861248
+rbx            0x0  0
+rcx            0x602010 6299664
+rdx            0x7fffffffe850   140737488349264
+rsi            0x602010 6299664
+rdi            0x7ffff7dd4400   140737351861248
+rbp            0x7fffffffe4e0   0x7fffffffe4e0
+rsp            0x7fffffffe4a0   0x7fffffffe4a0
+r8             0x400ac4 4197060
+r9             0x0  0
+r10            0x1  1
+r11            0x246    582
+r12            0x400680 4195968
+r13            0x7fffffffe600   140737488348672
+r14            0x0  0
+r15            0x0  0
+rip            0x40082f 0x40082f <wc+20>
+eflags         0x206    [ PF IF ]
+cs             0x33 51
+ss             0x2b 43
+ds             0x0  0
+es             0x0  0
+fs             0x0  0
+gs             0x0  0
+
+rax and rdi are holding ofile, 
+rcx and rsi are holding infile
+rdx is holding the inname

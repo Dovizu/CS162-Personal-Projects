@@ -64,7 +64,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         if (isNewLine(curr) && !isNonUnixNewLine(curr, last)) {
             ++newlines;
         }
-        if (isWhitespace(curr)) {
+        if (isspace(curr)) {
             status = DELIMIT;
         } else if (status == DELIMIT && curr != 0) {
             status = INWORD;
