@@ -29,7 +29,7 @@ bool isNonUnixNewLine(char curr, char last) {
 bool isWhitespace(char curr) {
     return (
         isNewLine(curr) ||
-        curr == 9    || // character tabulation
+        curr == 9    || // horizontal tab
         curr == 32   || // space
         curr == 160  || // no-break space
         curr == 5760 || // ogham space mark
@@ -45,7 +45,8 @@ bool isWhitespace(char curr) {
         curr == 8202 || // hair space
         curr == 8239 || // narrow non-break space
         curr == 8287 || // medium mathematical space
-        curr == 12288   // ideographic space
+        curr == 12288 ||  // ideographic space
+        curr == 6158 // mongolian vowel separator
         );
 }
 
@@ -65,11 +66,9 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
         }
         if (isWhitespace(curr)) {
             status = DELIMIT;
-        } else if (status == DELIMIT) {
-            if (curr != 0) {
-                status = INWORD;
-                ++words;    
-            }
+        } else if (status == DELIMIT && curr != 0) {
+            status = INWORD;
+            ++words;
         }
         ++bytes;
         last = curr;
