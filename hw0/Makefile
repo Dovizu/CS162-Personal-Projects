@@ -20,5 +20,10 @@ clean:
 check:
 	make clean
 	make main wc
-	test "`echo | ./main | grep 'stack size: '`" = "stack size: `echo | ulimit -s`"
-	test "`echo | ./main | grep 'stack size: '`" = "stack size: `echo | ulimit -s`"
+	test "`wc main.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`" = "`./wc main.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`"
+	test "`wc map.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`" = "`./wc map.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`"
+	test "`wc wc.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`" = "`./wc wc.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`"
+
+	test "`echo | ./main | grep 'stack size: '`" = "stack size: `A=$(ulimit -Ss) echo $(($A*1024))`"	
+	test "`echo | ./main | grep 'process limit: '`" = "process limit: `echo | ulimit -Hu`"
+	test "`echo | ./main | grep 'max file descriptors: '`" = "max file descriptors: `echo | ulimit -Hn`"
