@@ -20,4 +20,5 @@ clean:
 check:
 	make clean
 	make main wc
-	test "`echo | ./main | grep 'stack size: '`" = "stack size: `echo | ulimit -Hs`"
+	test "`echo | ./main | grep 'stack size: '`" = "stack size: `echo | ulimit -s`"
+	test "`echo | ./main | grep 'stack size: '`" = "stack size: `echo | ulimit -s`"

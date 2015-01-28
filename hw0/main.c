@@ -5,11 +5,7 @@
 int main() {
     struct rlimit lim;
     getrlimit(RLIMIT_STACK, &lim);
-    if (lim.rlim_max == -1) {
-        printf("stack size: unlimited\n");    
-    } else {
-        printf("stack size: %d\n",  (int)lim.rlim_max);
-    }
+    printf("stack size: %d\n",  (int)lim.rlim_cur);
     getrlimit(RLIMIT_NPROC, &lim);
     printf("process limit: %d\n", (int)lim.rlim_max);
     getrlimit(RLIMIT_NOFILE, &lim);
