@@ -9,8 +9,8 @@
 bool isNewLine(char curr) {
     return (
         curr == 10 || // LF
-        curr == 11 || // VT vertical tab
-        curr == 12 || // FF, form feed
+        // curr == 11 || // VT vertical tab
+        // curr == 12 || // FF, form feed
         curr == 13 || // CR
         curr == 21 || // EBCDIC systems
         curr == 30 || // RS, QNX before version 4
@@ -61,7 +61,7 @@ void wc(FILE *ofile, FILE *infile, char *inname) {
     int status = DELIMIT;
     while ((curr=getc(infile)) != EOF) {
         // new lines / carriage returns
-        if (isNewLine(curr)) {
+        if (isNewLine(curr) && !isNonUnixNewLine(curr, last)) {
             ++newlines;
         }
         if (isspace(curr)) {
