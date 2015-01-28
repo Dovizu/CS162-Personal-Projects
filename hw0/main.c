@@ -5,9 +5,9 @@
 int main() {
     struct rlimit lim;
     getrlimit(RLIMIT_STACK, &lim);
-    printf("stack size: %d\n",  (unsigned int)lim.rlim_max);
+    printf("stack size: %d\n",  (int)lim.rlim_max);
     getrlimit(RLIMIT_NPROC, &lim);
-    printf("process limit: %d\n", (unsigned int)lim.rlim_max);
+    printf("process limit: %d\n", (int)lim.rlim_max);
     getrlimit(RLIMIT_NOFILE, &lim);
-    printf("max file descriptors: %d\n", (unsigned int)lim.rlim_max);
+    printf("max file descriptors: %d\n", (int)lim.rlim_max);
 }
