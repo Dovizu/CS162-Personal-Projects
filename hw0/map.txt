@@ -1,0 +1,60 @@
+_main  @ 4005c2
+recur @ 40057d
+_main stack: 7fff3681269c
+static data: 601048
+Heap: malloc 1: 607010
+Heap: malloc 2: 607080
+recur call 3: stack@ 7fff3681266c
+recur call 2: stack@ 7fff3681263c
+recur call 1: stack@ 7fff3681260c
+recur call 0: stack@ 7fff368125dc
+
+• Using objdump on the map executable. Which of the addresses from the previous section are defined in the executable, and which segment is each defined in?
+
+'stuff' is defined at 0x601048, which is '.data'
+'foo' is defined at 0x601050, which is '.bss'
+'recur' is defined at 0x40057d, which is '.text'
+'main' is defined at 0x4005c2, which is '.text'
+
+• Make a list of the important segments, and what they are used for.
+
+.data: statically allocated variables
+.bss: statically allocated with zero-valued bits
+.text: code
+
+• What direction is the stack growing in?
+Up (smaller addresses)
+
+• How large is the stack frame for each recursive call?
+48 bytes
+
+• Where is the heap? What direction is it growing in?
+Down (larger addresses)
+
+• Are the two malloc()ed memory areas contiguous?
+No, there's a 12 byte difference inbetween
+
+• Make a high level map of the address space for the program containing each of the important segments, where they start and end, where the holes are, and what direction things grow in.
+
++--------+
+| .text  |
++--------+
+| .data  |
++--------+
+| .bss   |
++--------+
+| Heap   |
+|        |
++---+----+
+|   |    |
+|   |    |
+|   v    |
+|        |
+|        |
+|   ^    |
+|   |    |
+|   |    |
++---+----+
+|        |
+| Stack  |
++--------+

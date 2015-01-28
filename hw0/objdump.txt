@@ -1,0 +1,21 @@
+• What file format is used for this binary? And what architecture is it compiled for?
+
+file format elf64-x86-64
+compiled for architecture: i386:x86-64
+
+• What are the names of segments you find?
+We have interp, note.ABI-tag, note.gnu.build-id, gnu.hash, dynsym, dynstr, gnu.version, gnu.version_r, rela.dyn, rela.plt, init, plt, text, fini, rodata, eh_frame_hdr, eh_frame, init_array, fini_array, jcr, dynamic, got, got.plt, data, bss, comment, debug_aranges, debug_info, debug_abbrev, debug_line, debug_str
+
+• What segment contains wc (the function) and what is it’s address? (hint: objdump -w wc — grep wc)
+
+The '.text' segment contains wc and the address is 0000000000400836
+
+• What about main?
+Also the '.text' segment at 0000000000400994
+
+• How do these correspond to what you observed in gdb when you were looking at the loaded, executing program?
+
+These correspond to the functions I observed in gdb, and the location of wc is roughly around the same place as when I observed in gdb, which means both times they are loaded into the '.text' segment.
+
+• Do you see the stack segment anywhere? What about the heap? Explain.
+No...

@@ -68,4 +68,5 @@ gs             0x0  0
 
 rax and rdi are holding ofile, 
 rcx and rsi are holding infile
+rbp points to some structure that holds the local variables point
 rdx is holding the inname
