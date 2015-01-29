@@ -24,6 +24,6 @@ check:
 	test "`wc map.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`" = "`./wc map.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`"
 	test "`wc wc.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`" = "`./wc wc.c |  sed -e 's/^[ \t]*//' | sed -e "s/[[:space:]]\+/ /g"`"
 
-	test "`echo | ./main | grep 'stack size: '`" = "stack size: `A=$(ulimit -Ss) echo $(($A*1024))`"	
-	test "`echo | ./main | grep 'process limit: '`" = "process limit: `echo | ulimit -Hu`"
-	test "`echo | ./main | grep 'max file descriptors: '`" = "max file descriptors: `echo | ulimit -Hn`"
+	ulimit -s 8192; test "`echo | ./main | grep "stack size: "`" = "stack size: `expr 8192 \* 1024`"
+	ulimit -p 7874; test "`echo | ./main | grep "process limit: "`" = "process limit: 7874"
+	ulimit -n 1024; test "`echo | ./main | grep "max file descriptors: "`" = "max file descriptors: 1024"
