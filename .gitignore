@@ -148,3 +148,16 @@ nb-configuration.xml
 *.x86_64
 *.hex
 
+
+#Other stuff
+.dSYM
+.DS_Store
+*.swp
+
+#HW0
+hw0/main
+hw0/map
+hw0/wc
+
+#HW1
+hw1/shell
