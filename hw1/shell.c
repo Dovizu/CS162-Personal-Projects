@@ -108,7 +108,20 @@ process* create_process(char* inputString)
   return NULL;
 }
 
-
+char* resolve_path(char *fname) {
+  char *PATH = getenv("PATH");
+  tok_t *t = getToks(PATH);
+  int i = 0;
+  for (i=0; t[i]; i++) {
+    char *full_path;
+    asprintf(&full_path, "%s/%s", t[i], fname);
+    if (access(full_path, F_OK) != -1) {
+      // file exists
+      return full_path;
+    }
+  }
+  return NULL;
+}
 
 int shell (int argc, char *argv[]) {
   char *s = malloc(INPUT_STRING_SIZE+1);			/* user input string */
@@ -136,7 +149,13 @@ int shell (int argc, char *argv[]) {
       int exit_status;
       pid_t pid = fork();
       if (pid == 0) {
-        execv(t[0], t);
+        char *file_path = t[0];
+        // try to resolve the file
+        if (access(file_path, F_OK) == -1 && !(file_path = resolve_path(file_path))) {
+          // cannot find file anywhere
+          exit(0);
+        }
+        execv(file_path, t);
       } else {
         // waits for child to finish
         waitpid(pid, &exit_status, 0);
