@@ -124,7 +124,9 @@ int shell (int argc, char *argv[]) {
   printf("%s running as PID %d under %d\n",argv[0],pid,ppid);
 
   lineNum=0;
-  fprintf(stdout, "%d [%s]:", lineNum, getcwd(NULL, 0));
+  char *cwd = getcwd(NULL, 0);
+  fprintf(stdout, "%d [%s]:", lineNum, cwd);
+  free(cwd);
   while ((s = freadln(stdin))){
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
@@ -132,7 +134,9 @@ int shell (int argc, char *argv[]) {
     else {
       fprintf(stdout, "This shell only supports built-ins. Replace this to run programs as commands.\n");
     }
-    fprintf(stdout, "%d [%s]:", lineNum, getcwd(NULL, 0));
+    cwd = getcwd(NULL, 0);
+    fprintf(stdout, "%d [%s]:", lineNum, cwd);
+    free(cwd);
   }
   return 0;
 }
