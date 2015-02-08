@@ -18,6 +18,8 @@
 #include "process.h"
 #include "shell.h"
 
+int asprintf(char **strp, const char *fmt, ...);
+
 int cmd_quit(tok_t arg[]) {
   printf("Bye\n");
   exit(0);
