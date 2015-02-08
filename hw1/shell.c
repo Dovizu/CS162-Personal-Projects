@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -17,6 +18,9 @@
 #include "parse.h"
 #include "process.h"
 #include "shell.h"
+
+static struct sigaction SIGINT_backup;
+static struct sigaction SIGTSTP_backup;
 
 int asprintf(char **strp, const char *fmt, ...);
 
@@ -92,6 +96,10 @@ void init_shell()
     tcgetattr(shell_terminal, &shell_tmodes);
   }
   /** YOUR CODE HERE */
+  struct sigaction ignore;
+  ignore.sa_handler = SIG_IGN;
+  sigaction(SIGTSTP, &ignore, &SIGTSTP_backup);
+  sigaction(SIGINT, &ignore, &SIGINT_backup);
 }
 
 /**
