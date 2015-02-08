@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -123,18 +124,50 @@ char* resolve_path(char *fname) {
   return NULL;
 }
 
+void setup_io(tok_t *t, tok_t* *cmds) {
+  int i;
+  for (i=0; t[i]; ++i) {
+    if (strcmp(t[i], ">") == 0) {
+      tok_t *commands = malloc(sizeof(tok_t)*i);
+      memcpy(commands, t, sizeof(tok_t)*i);
+      *cmds = commands;
+      tok_t outfile = t[i+1];
+      fflush(stdout);
+      FILE *out_desc = fopen(outfile, "w");
+      dup2(fileno(out_desc), STDOUT_FILENO);
+      fclose(out_desc);
+      return;
+    }
+    if (strcmp(t[i], "<") == 0) {
+      tok_t *commands = malloc(sizeof(tok_t)*i);
+      memcpy(commands, t, sizeof(tok_t)*i);
+      *cmds = commands;
+      tok_t infile = t[i+1];
+      fflush(stdin);
+      int in_desc = open(infile, O_RDONLY);
+      dup2(in_desc, STDIN_FILENO);
+      close(in_desc);
+      return;
+    }
+  }
+  *cmds = t;
+}
+
 void run_program(tok_t *t) {
   // execute another program specified in command
   int exit_status;
   pid_t pid = fork();
   if (pid == 0) {
-    char *file_path = t[0];
+    tok_t *commands;
+    setup_io(t, &commands);
+
+    char *file_path = commands[0];
     // try to resolve the file
     if (access(file_path, F_OK) == -1 && !(file_path = resolve_path(file_path))) {
       // cannot find file anywhere
       exit(0);
     }
-    execv(file_path, t);
+    execv(file_path, commands);
   } else {
     // waits for child to finish
     waitpid(pid, &exit_status, 0);
