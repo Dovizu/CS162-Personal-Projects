@@ -123,6 +123,24 @@ char* resolve_path(char *fname) {
   return NULL;
 }
 
+void run_program(tok_t *t) {
+  // execute another program specified in command
+  int exit_status;
+  pid_t pid = fork();
+  if (pid == 0) {
+    char *file_path = t[0];
+    // try to resolve the file
+    if (access(file_path, F_OK) == -1 && !(file_path = resolve_path(file_path))) {
+      // cannot find file anywhere
+      exit(0);
+    }
+    execv(file_path, t);
+  } else {
+    // waits for child to finish
+    waitpid(pid, &exit_status, 0);
+  }
+}
+
 int shell (int argc, char *argv[]) {
   char *s = malloc(INPUT_STRING_SIZE+1);			/* user input string */
   tok_t *t;			/* tokens parsed from input */
@@ -145,21 +163,7 @@ int shell (int argc, char *argv[]) {
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else {
-      // execute another program specified in command
-      int exit_status;
-      pid_t pid = fork();
-      if (pid == 0) {
-        char *file_path = t[0];
-        // try to resolve the file
-        if (access(file_path, F_OK) == -1 && !(file_path = resolve_path(file_path))) {
-          // cannot find file anywhere
-          exit(0);
-        }
-        execv(file_path, t);
-      } else {
-        // waits for child to finish
-        waitpid(pid, &exit_status, 0);
-      }
+      run_program(t);
     }
     ++lineNum;
     cwd = getcwd(NULL, 0);
