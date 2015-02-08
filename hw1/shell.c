@@ -143,6 +143,7 @@ void setup_io(tok_t *t, tok_t* *cmds, process *proc) {
       dup2(fileno(out_desc), STDOUT_FILENO);
       fclose(out_desc);
       proc->stdout = fileno(stdout);
+      tcgetattr(fileno(stdout), &(proc->tmodes));
       return;
     }
     if (strcmp(t[i], "<") == 0) {
@@ -155,6 +156,7 @@ void setup_io(tok_t *t, tok_t* *cmds, process *proc) {
       dup2(in_desc, STDIN_FILENO);
       close(in_desc);
       proc->stdin = fileno(stdin);
+      tcgetattr(fileno(stdin), &(proc->tmodes));
       return;
     }
   }
@@ -174,6 +176,7 @@ void run_program(tok_t *t, char *s) {
     // try to resolve the file
     if (access(file_path, F_OK) == -1 && !(file_path = resolve_path(file_path))) {
       // cannot find file anywhere
+      proc->stopped = 1;
       exit(0);
     }
     execv(file_path, commands);
@@ -181,6 +184,14 @@ void run_program(tok_t *t, char *s) {
     proc->pid = pid;
     // waits for child to finish
     waitpid(pid, &exit_status, 0);
+    if (WIFEXITED(exit_status)) {
+      proc->status = WEXITSTATUS(exit_status);
+      if (WIFSTOPPED(exit_status)) {
+        proc->stopped = 1;
+      } else {
+        proc->completed = 1;
+      }
+    }
   }
 }
 
@@ -203,7 +214,8 @@ int shell (int argc, char *argv[]) {
   free(cwd);
   while ((s = freadln(stdin))){
     char *s_copy;
-    strcpy(s_copy, s);
+    asprintf(&s_copy, "%s", s);
+
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
