@@ -105,10 +105,14 @@ void add_process(process* p)
 /**
  * Creates a process given the inputString from stdin
  */
-process* create_process(char* inputString)
-{
-  /** YOUR CODE HERE */
-  return NULL;
+process* create_process(char* inputString) {
+  process *proc = malloc(sizeof(process));
+  tok_t *t = getToks(inputString); /* break the line into tokens */
+  int i;
+  for (i=0; t[i]; ++i){};
+  proc->argc = i;
+  proc->argv = t;
+  return proc;
 }
 
 char* resolve_path(char *fname) {
@@ -126,7 +130,7 @@ char* resolve_path(char *fname) {
   return NULL;
 }
 
-void setup_io(tok_t *t, tok_t* *cmds) {
+void setup_io(tok_t *t, tok_t* *cmds, process *proc) {
   int i;
   for (i=0; t[i]; ++i) {
     if (strcmp(t[i], ">") == 0) {
@@ -138,6 +142,7 @@ void setup_io(tok_t *t, tok_t* *cmds) {
       FILE *out_desc = fopen(outfile, "w");
       dup2(fileno(out_desc), STDOUT_FILENO);
       fclose(out_desc);
+      proc->stdout = fileno(stdout);
       return;
     }
     if (strcmp(t[i], "<") == 0) {
@@ -149,19 +154,21 @@ void setup_io(tok_t *t, tok_t* *cmds) {
       int in_desc = open(infile, O_RDONLY);
       dup2(in_desc, STDIN_FILENO);
       close(in_desc);
+      proc->stdin = fileno(stdin);
       return;
     }
   }
   *cmds = t;
 }
 
-void run_program(tok_t *t) {
+void run_program(tok_t *t, char *s) {
   // execute another program specified in command
   int exit_status;
+  process* proc = create_process(s);
   pid_t pid = fork();
   if (pid == 0) {
     tok_t *commands;
-    setup_io(t, &commands);
+    setup_io(t, &commands, proc);
 
     char *file_path = commands[0];
     // try to resolve the file
@@ -171,6 +178,7 @@ void run_program(tok_t *t) {
     }
     execv(file_path, commands);
   } else {
+    proc->pid = pid;
     // waits for child to finish
     waitpid(pid, &exit_status, 0);
   }
@@ -194,11 +202,13 @@ int shell (int argc, char *argv[]) {
   fprintf(stdout, "%d [%s]:", lineNum, cwd);
   free(cwd);
   while ((s = freadln(stdin))){
+    char *s_copy;
+    strcpy(s_copy, s);
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else {
-      run_program(t);
+      run_program(t, s_copy);
     }
     ++lineNum;
     cwd = getcwd(NULL, 0);
