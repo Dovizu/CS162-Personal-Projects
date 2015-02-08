@@ -176,7 +176,23 @@ void run_program(tok_t *t, char *s) {
   int exit_status;
   process* proc = create_process(s);
   pid_t pid = fork();
+  // both parent and child should set put the child into its own process group
+  
+
   if (pid == 0) {
+    // put into its own process group
+    pid_t child_pid = getpid();
+    if (setpgid(child_pid, child_pid) < 0) {
+      perror("Couldn't put the program in its own process group");
+      exit(1);
+    }
+    // restore signal behavior
+    // sigaction(SIGTSTP, &SIGTSTP_backup, NULL);
+    // sigaction(SIGINT, &SIGINT_backup, NULL);
+    // Take control of the terminal
+    // tcsetpgrp(proc->stdin, getppid());
+    // tcgetattr(proc->stdin, &(proc->tmodes));
+
     tok_t *commands;
     setup_io(t, &commands, proc);
 
@@ -200,6 +216,8 @@ void run_program(tok_t *t, char *s) {
         proc->completed = 1;
       }
     }
+    // tcsetpgrp(shell_terminal, shell_pgid);
+    // tcgetattr(shell_terminal, &shell_tmodes);
   }
 }
 
@@ -210,7 +228,7 @@ int shell (int argc, char *argv[]) {
   int fundex = -1;
   pid_t pid = getpid();		/* get current processes PID */
   pid_t ppid = getppid();	/* get parents PID */
-  pid_t cpid, tcpid, cpgid;
+  // pid_t cpid, tcpid, cpgid;
 
   init_shell();
 
