@@ -155,7 +155,7 @@ char* resolve_path(char *fname) {
       return full_path;
     }
   }
-  // printf("No command '%s' found.\n", fname);
+  printf("No command '%s' found.\n", fname);
   return NULL;
 }
 
@@ -305,6 +305,7 @@ int shell (int argc, char *argv[]) {
   fprintf(stdout, "%d [%s]:", lineNum, cwd);
   free(cwd);
   while ((s = freadln(stdin))){
+    printf("%s\n", s);
     char *s_copy;
     asprintf(&s_copy, "%s", s);
 
