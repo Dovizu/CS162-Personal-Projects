@@ -21,16 +21,19 @@
 #include "shell.h"
 
 int asprintf(char **strp, const char *fmt, ...);
+int cmd_help(tok_t arg[]);
+int cmd_change_dir(tok_t arg[]);
+int cmd_fg(tok_t arg[]);
+int cmd_bg(tok_t arg[]);
+int cmd_wait(tok_t arg[]);
+process *find_process(pid_t pid);
+
 
 int cmd_quit(tok_t arg[]) {
   printf("Bye\n");
   exit(0);
   return 1;
 }
-
-int cmd_help(tok_t arg[]);
-
-int cmd_change_dir(tok_t arg[]);
 
 /* Command Lookup table */
 typedef int cmd_fun_t (tok_t args[]); /* cmd functions take token array and return int */
@@ -44,6 +47,9 @@ fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_quit, "quit", "quit the command shell"},
   {cmd_change_dir, "cd", "change the current working directory"},
+  {cmd_fg, "fg", "move the process with id pid to the foreground"},
+  {cmd_bg, "bg", "move the process with id pid to the background"},
+  {cmd_wait, "wait", "wait until all backgrounded jobs have terminated before returning to the prompt."},
 };
 
 int cmd_help(tok_t arg[]) {
@@ -56,6 +62,26 @@ int cmd_help(tok_t arg[]) {
 
 int cmd_change_dir(tok_t arg[]) {
   chdir(*arg);
+  return 1;
+}
+
+int cmd_fg(tok_t arg[]) {
+  pid_t pid = (pid_t)atoi(arg[0]);
+  process *p = find_process(pid);
+  if (!p) printf("No process with PID %d is found, fg exits.\n", pid);
+  put_process_in_foreground(p, 0);
+  return 1;
+}
+
+int cmd_bg(tok_t arg[]) {
+  pid_t pid = (pid_t)atoi(arg[0]);
+  process *p = find_process(pid);
+  if (!p) printf("No process with PID %d is found, bg exits.\n", pid);
+  put_process_in_background(p, 0);
+  return 1;
+}
+
+int cmd_wait(tok_t arg[]) {
   return 1;
 }
 
@@ -102,17 +128,8 @@ void init_shell()
   signal(SIGCHLD, SIG_IGN);
 }
 
-/**
- * Add a process to our process list
- */
- void add_process(process* p)
- {
-  /** YOUR CODE HERE */
- }
-
-
-
- char* resolve_path(char *fname) {
+char* resolve_path(char *fname) {
+  if (!fname) return NULL;
   char *ORIGINAL_PATH = getenv("PATH");
   char *PATH;
   asprintf(&PATH, "%s", ORIGINAL_PATH);
@@ -126,48 +143,50 @@ void init_shell()
       return full_path;
     }
   }
+  printf("No command '%s' found.\n", fname);
   return NULL;
 }
 
-// void setup_io(tok_t *t, tok_t* *cmds, process *proc) {
-//   int i;
-//   for (i=0; t[i]; ++i) {
-//     if (strcmp(t[i], ">") == 0) {
-//       tok_t *commands = malloc(sizeof(tok_t)*i);
-//       memcpy(commands, t, sizeof(tok_t)*i);
-//       *cmds = commands;
-//       tok_t outfile = t[i+1];
-//       fflush(stdout);
-//       FILE *out_desc = fopen(outfile, "w");
-//       dup2(fileno(out_desc), STDOUT_FILENO);
-//       fclose(out_desc);
-//       proc->stdout = fileno(stdout);
-//       tcgetattr(fileno(stdout), &(proc->tmodes));
-//       return;
-//     }
-//     if (strcmp(t[i], "<") == 0) {
-//       tok_t *commands = malloc(sizeof(tok_t)*i);
-//       memcpy(commands, t, sizeof(tok_t)*i);
-//       *cmds = commands;
-//       tok_t infile = t[i+1];
-//       fflush(stdin);
-//       int in_desc = open(infile, O_RDONLY);
-//       dup2(in_desc, STDIN_FILENO);
-//       close(in_desc);
-//       proc->stdin = fileno(stdin);
-//       tcgetattr(fileno(stdin), &(proc->tmodes));
-//       return;
-//     }
-//   }
-//   *cmds = t;
-// }
+/**
+ * Add a process to our process list
+ */
+ void add_process(process* p) {
+  if (!first_process) {
+    first_process = p;
+  } else {
+    process *last_process = first_process;
+    while (last_process->next && (last_process = last_process->next));
+    last_process->next = p;
+    p->prev = last_process;
+    p->next = NULL;  
+  }
+}
+
+process *find_process(pid_t pid) {
+  process *last_process = first_process;
+  if (last_process) {
+    while (last_process->pid != pid && (last_process = last_process->next)); 
+  }
+  return last_process;
+}
+
 /**
  * Creates a process given the inputString from stdin
  */
  process* create_process(char* inputString) {
-  
+
   // create process on heap
   process *p = malloc(sizeof(process));
+  // look for background flag
+  char *amp = strchr(inputString, '&');
+  if (amp) {
+    int i = (int)(amp - inputString);
+    p->background = true;
+    char *old_string = inputString;
+    inputString = malloc(sizeof(char)*(i+1));
+    inputString[i] = '\0';
+    strncpy(inputString, old_string, sizeof(char)*i);
+  }
   // tokenize command line input
   tok_t *t = getToks(inputString); /* break the line into tokens */
   // figure out argv, argc and io
@@ -177,6 +196,7 @@ void init_shell()
   p->stdin = STDIN_FILENO;
   p->stdout = STDOUT_FILENO;
   p->stderr = STDERR_FILENO;
+
   for (argc=0; t[argc]; ++argc) {
     if (!io_found) {
       // figure out argv
@@ -211,11 +231,11 @@ void init_shell()
 
 void run_program(tok_t *t, char *s) {
   // execute another program specified in command
-  int exit_status;
   process* proc;
   if ((proc = create_process(s)) != NULL) {
+    add_process(proc);
     pid_t pid = fork();
-  // both parent and child should set put the child into its own process group
+    // both parent and child should set put the child into its own process group
     if (pid == 0) {
       proc->pid = getpid();
       launch_process(proc);
@@ -223,11 +243,16 @@ void run_program(tok_t *t, char *s) {
       proc->pid = pid;
       if (shell_is_interactive) {
         setpgid(proc->pid, proc->pid);
+        if (proc->background) {
+          put_process_in_background(proc, 0);
+        } else {
+          put_process_in_foreground(proc, 0);  
+        }
       }
-      waitpid(proc->pid, &exit_status, 0);
-      tcsetpgrp(shell_terminal, shell_pgid);
-      tcgetattr(shell_terminal, &shell_tmodes);
-      tcsetattr(shell_terminal, TCSADRAIN, &shell_tmodes);
+      // waitpid(proc->pid, &exit_status, 0);
+      // tcsetpgrp(shell_terminal, shell_pgid);
+      // tcgetattr(shell_terminal, &shell_tmodes);
+      // tcsetattr(shell_terminal, TCSADRAIN, &shell_tmodes);
     // init_shell();
     // if (WIFEXITED(exit_status)) {
     //   proc->status = WEXITSTATUS(exit_status);

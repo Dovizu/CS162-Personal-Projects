@@ -55,12 +55,31 @@
  * is in interactive mode. If the cont argument is true, send the process
  * group a SIGCONT signal to wake it up.
  */
- void put_process_in_foreground (process *p, int cont) {
-  /** YOUR CODE HERE */
- }
+void put_process_in_foreground (process *p, int cont) {
+  tcsetpgrp(shell_terminal, p->pid);
+  if (cont) {
+    tcsetattr(shell_terminal, TCSADRAIN, &p->tmodes);
+    if (kill(- p->pid, SIGCONT) < 0) {
+      perror("kill (SIGCONT)");
+    }
+  }
+  int exit_status;
+  // wait for process to finish
+  waitpid(p->pid, &exit_status, 0);
+  // put shell back in foreground
+  tcsetpgrp(shell_terminal, shell_pgid);
+  // save process's terminal modes
+  tcgetattr(shell_terminal, &p->tmodes);
+  // restore shell's terminal modes
+  tcsetattr(shell_terminal, TCSADRAIN, &shell_tmodes);
+}
 
 /* Put a process in the background. If the cont argument is true, send
  * the process group a SIGCONT signal to wake it up. */
- void put_process_in_background (process *p, int cont) {
-  /** YOUR CODE HERE */
- }
+void put_process_in_background (process *p, int cont) {
+  if (cont) {
+    if (kill(- p->pid, SIGCONT) < 0) {
+      perror("kill (SIGCONT)");
+    }
+  }
+}
