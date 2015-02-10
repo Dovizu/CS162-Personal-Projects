@@ -30,7 +30,11 @@ process *find_process(pid_t pid);
 
 
 int cmd_quit(tok_t arg[]) {
-  wait_all();
+  int status;
+  pid_t pid;
+  do {
+    pid = waitpid(WAIT_ANY, &status, 0);
+  } while(pid > 0);
   printf("Bye\n");
   exit(0);
   return 1;
