@@ -65,14 +65,15 @@ void wait_all() {
     if (!p->background) {
       tcsetpgrp(shell_terminal, pgid);
     }
-    // restore signal handling for this process
-    signal(SIGINT, SIG_DFL);
-    signal(SIGQUIT, SIG_DFL);
-    signal(SIGTSTP, SIG_DFL);
-    signal(SIGTTIN, SIG_DFL);
-    signal(SIGTTOU, SIG_DFL);
-    signal(SIGCHLD, SIG_DFL);
   }
+  // restore signal handling for this process
+  signal(SIGINT, SIG_DFL);
+  signal(SIGQUIT, SIG_DFL);
+  signal(SIGTSTP, SIG_DFL);
+  signal(SIGTTIN, SIG_DFL);
+  signal(SIGTTOU, SIG_DFL);
+  signal(SIGCHLD, SIG_DFL);
+  
   // redirect in >
   if (p->stdin != STDIN_FILENO) {
     dup2(p->stdin, STDIN_FILENO);

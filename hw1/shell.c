@@ -259,7 +259,6 @@ void run_program(tok_t *t, char *s) {
       proc->pid = pid;
       if (shell_is_interactive) {
         setpgid(proc->pid, proc->pid);
-        
       }
       if (proc->background) {
         put_process_in_background(proc, false);
