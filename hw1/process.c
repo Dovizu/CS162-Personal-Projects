@@ -39,6 +39,14 @@ void wait_for_process(process *p) {
   }
 }
 
+void wait_all() {
+  int status;
+  pid_t pid;
+  do {
+    pid = waitpid(WAIT_ANY, &status, WUNTRACED);
+  } while(mark_status(pid, status));
+}
+
 /**
  * Executes the process p.
  * If the shell is in interactive mode and the process is a foreground process,

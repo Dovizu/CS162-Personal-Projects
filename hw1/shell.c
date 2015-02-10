@@ -93,8 +93,7 @@ int cmd_bg(tok_t arg[]) {
 }
 
 int cmd_wait(tok_t arg[]) {
-  int status;
-  pid_t pid;
+  wait_all();
   return 1;
 }
 
@@ -306,6 +305,7 @@ int shell (int argc, char *argv[]) {
   fprintf(stdout, "%d [%s]:", lineNum, cwd);
   free(cwd);
   while ((s = freadln(stdin))){
+    printf("%s\n", s);
     char *s_copy;
     asprintf(&s_copy, "%s", s);
 
