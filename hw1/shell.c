@@ -259,30 +259,14 @@ void run_program(tok_t *t, char *s) {
       proc->pid = pid;
       if (shell_is_interactive) {
         setpgid(proc->pid, proc->pid);
-        if (proc->background) {
-          put_process_in_background(proc, false);
-        } else {
-          put_process_in_foreground(proc, false);  
-        }
+        
       }
-      // waitpid(proc->pid, &exit_status, 0);
-      // tcsetpgrp(shell_terminal, shell_pgid);
-      // tcgetattr(shell_terminal, &shell_tmodes);
-      // tcsetattr(shell_terminal, TCSADRAIN, &shell_tmodes);
-    // init_shell();
-    // if (WIFEXITED(exit_status)) {
-    //   proc->status = WEXITSTATUS(exit_status);
-    //   if (WIFSTOPPED(exit_status)) {
-    //     proc->stopped = 1;
-    //   } else {
-    //     proc->completed = 1;
-    //   }
-    // }
+      if (proc->background) {
+        put_process_in_background(proc, false);
+      } else {
+        put_process_in_foreground(proc, false);  
+      }
     }
-    /* Clean up after pipes.  */
-    // if (proc->stdin != STDIN_FILENO) close(proc->stdin);
-    // if (proc->stdout != STDOUT_FILENO) close(proc->stdout);
-    // if (proc->stderr != STDERR_FILENO) close(proc->stderr);
   }
   
 }
@@ -305,7 +289,7 @@ int shell (int argc, char *argv[]) {
   fprintf(stdout, "%d [%s]:", lineNum, cwd);
   free(cwd);
   while ((s = freadln(stdin))){
-    printf("%s\n", s);
+    // printf("%s\n", s);
     char *s_copy;
     asprintf(&s_copy, "%s", s);
 
