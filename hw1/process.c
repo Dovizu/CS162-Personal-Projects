@@ -18,6 +18,7 @@ bool mark_status(pid_t pid, int status) {
       p->stopped = true;
     } else {
       p->completed = true;
+      p->stopped = true;
     }
     return true;
   }
@@ -34,7 +35,7 @@ void wait_for_process(process *p) {
     pid = waitpid(WAIT_ANY, &status, WUNTRACED);
   } while(mark_status(pid, status) && !p->stopped && !p->completed);
   if (p->stopped) {
-    printf("PID: %d stopped.\n", p->pid);
+    printf("[%d]\tStopped\t%s\n", p->pid, p->argv[0]);
   }
 }
 
@@ -108,10 +109,10 @@ void put_process_in_foreground (process *p, int cont) {
 /* Put a process in the background. If the cont argument is true, send
  * the process group a SIGCONT signal to wake it up. */
 void put_process_in_background (process *p, int cont) {
-  printf("PID: %d in background.\n", p->pid);
   if (cont) {
     if (kill(- p->pid, SIGCONT) < 0) {
       perror("kill (SIGCONT)");
     }
+    printf("PID: %d in background.\n", p->pid);
   }
 }

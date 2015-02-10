@@ -65,47 +65,31 @@ int cmd_change_dir(tok_t arg[]) {
   return 1;
 }
 
-int cmd_fg(tok_t arg[]) {
+int manage_process(tok_t arg[], bool foreground) {
   process *p;
-  pid_t pid;
-  if (arg[0]) {
-    pid = (pid_t)atoi(arg[0]);
-    p = find_process(pid);  
-    if (!p) {
-    printf("No process with PID %d is found, fg exits.\n", pid);
-    } else {
-      p->background = false;
-      if (p->stopped) {
-        put_process_in_foreground(p, true);
-        p->stopped = false;
-      } else {
-        put_process_in_foreground(p, false);
-      }
-    }
+  pid_t pid = 0;
+  if (arg[0]) pid = (pid_t)atoi(arg[0]);
+  p = find_process(pid);  
+  if (!p) {
+    printf("No such process: ");
+    if (pid == 0) printf("most recently launched.\n");
+    else printf("%d.\n", pid);
+  } else {
+    if (foreground) p->background = false;
+    else p->background = true;
+    p->stopped = false;
+    if (foreground) put_process_in_foreground(p, true);
+    else put_process_in_background(p, true);
   }
   return 1;
 }
 
+int cmd_fg(tok_t arg[]) {
+  return manage_process(arg, true);
+}
+
 int cmd_bg(tok_t arg[]) {
-  process *p;
-  pid_t pid;
-  if (arg[0]) {
-    pid = (pid_t)atoi(arg[0]);
-    p = find_process(pid);  
-    if (!p) {
-    printf("No process with PID %d is found, bg exits.\n", pid);
-    } else {
-      p->background = true;
-      if (p->stopped) {
-        put_process_in_background(p, true);
-        p->stopped = false;
-      } else {
-        put_process_in_background(p, false);
-      }
-      
-    }
-  }
-  return 1;
+  return manage_process(arg, false);
 }
 
 int cmd_wait(tok_t arg[]) {
