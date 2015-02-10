@@ -66,22 +66,51 @@ int cmd_change_dir(tok_t arg[]) {
 }
 
 int cmd_fg(tok_t arg[]) {
-  pid_t pid = (pid_t)atoi(arg[0]);
-  process *p = find_process(pid);
-  if (!p) printf("No process with PID %d is found, fg exits.\n", pid);
-  put_process_in_foreground(p, 0);
+  process *p;
+  pid_t pid;
+  if (arg[0]) {
+    pid = (pid_t)atoi(arg[0]);
+    p = find_process(pid);  
+    if (!p) {
+    printf("No process with PID %d is found, fg exits.\n", pid);
+    } else {
+      p->background = false;
+      if (p->stopped) {
+        put_process_in_foreground(p, true);
+        p->stopped = false;
+      } else {
+        put_process_in_foreground(p, false);
+      }
+    }
+  }
   return 1;
 }
 
 int cmd_bg(tok_t arg[]) {
-  pid_t pid = (pid_t)atoi(arg[0]);
-  process *p = find_process(pid);
-  if (!p) printf("No process with PID %d is found, bg exits.\n", pid);
-  put_process_in_background(p, 0);
+  process *p;
+  pid_t pid;
+  if (arg[0]) {
+    pid = (pid_t)atoi(arg[0]);
+    p = find_process(pid);  
+    if (!p) {
+    printf("No process with PID %d is found, bg exits.\n", pid);
+    } else {
+      p->background = true;
+      if (p->stopped) {
+        put_process_in_background(p, true);
+        p->stopped = false;
+      } else {
+        put_process_in_background(p, false);
+      }
+      
+    }
+  }
   return 1;
 }
 
 int cmd_wait(tok_t arg[]) {
+  int status;
+  pid_t pid;
   return 1;
 }
 
@@ -165,7 +194,11 @@ char* resolve_path(char *fname) {
 process *find_process(pid_t pid) {
   process *last_process = first_process;
   if (last_process) {
-    while (last_process->pid != pid && (last_process = last_process->next)); 
+    if (pid) {
+      while (last_process->pid != pid && (last_process = last_process->next));   
+    } else {
+      while (last_process->next) last_process = last_process->next;
+    }
   }
   return last_process;
 }
@@ -244,9 +277,9 @@ void run_program(tok_t *t, char *s) {
       if (shell_is_interactive) {
         setpgid(proc->pid, proc->pid);
         if (proc->background) {
-          put_process_in_background(proc, 0);
+          put_process_in_background(proc, false);
         } else {
-          put_process_in_foreground(proc, 0);  
+          put_process_in_foreground(proc, false);  
         }
       }
       // waitpid(proc->pid, &exit_status, 0);

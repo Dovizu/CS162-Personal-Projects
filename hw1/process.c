@@ -5,6 +5,38 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <termios.h>
+#include <stdbool.h>
+
+// return false if the no process with pid can be found or if pid is 0
+bool mark_status(pid_t pid, int status) {
+  if (pid == 0) return false;
+  process *p = first_process;
+  while (p && p->pid != pid) p = p->next;
+  if (p) {
+    p->status = status;
+    if (WIFSTOPPED(p->status)) {
+      p->stopped = true;
+    } else {
+      p->completed = true;
+    }
+    return true;
+  }
+  return false;
+}
+
+// wait for process p to finish and also mark other processes that finish before p
+void wait_for_process(process *p) {
+  int status;
+  pid_t pid;
+  do {
+    // while waiting for p to stop/complete, also update other finished processes
+    // once p actually finishes, while loop will stop running
+    pid = waitpid(WAIT_ANY, &status, WUNTRACED);
+  } while(mark_status(pid, status) && !p->stopped && !p->completed);
+  if (p->stopped) {
+    printf("PID: %d stopped.\n", p->pid);
+  }
+}
 
 /**
  * Executes the process p.
@@ -63,9 +95,8 @@ void put_process_in_foreground (process *p, int cont) {
       perror("kill (SIGCONT)");
     }
   }
-  int exit_status;
   // wait for process to finish
-  waitpid(p->pid, &exit_status, 0);
+  wait_for_process(p);
   // put shell back in foreground
   tcsetpgrp(shell_terminal, shell_pgid);
   // save process's terminal modes
@@ -77,6 +108,7 @@ void put_process_in_foreground (process *p, int cont) {
 /* Put a process in the background. If the cont argument is true, send
  * the process group a SIGCONT signal to wake it up. */
 void put_process_in_background (process *p, int cont) {
+  printf("PID: %d in background.\n", p->pid);
   if (cont) {
     if (kill(- p->pid, SIGCONT) < 0) {
       perror("kill (SIGCONT)");
