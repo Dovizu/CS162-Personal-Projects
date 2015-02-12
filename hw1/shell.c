@@ -30,13 +30,10 @@ process *find_process(pid_t pid);
 
 
 int cmd_quit(tok_t arg[]) {
-  int status;
-  pid_t pid;
-  do {
-    pid = waitpid(WAIT_ANY, &status, 0);
-  } while(pid > 0);
-  printf("Bye\n");
-  exit(0);
+  if (!first_process) {
+    printf("Bye\n");
+    exit(0);
+  }
   return 1;
 }
 
@@ -80,11 +77,14 @@ int manage_process(tok_t arg[], bool foreground) {
     if (pid == 0) printf("most recently launched.\n");
     else printf("%d.\n", pid);
   } else {
-    if (foreground) p->background = false;
-    else p->background = true;
-    p->stopped = false;
-    if (foreground) put_process_in_foreground(p, true);
-    else put_process_in_background(p, true);
+    if (foreground) {
+      p->background = false;
+      p->stopped = false;
+      put_process_in_foreground(p, true);
+    } else {
+      p->background = true;
+      put_process_in_background(p, false);
+    }
   }
   return 1;
 }
@@ -203,6 +203,7 @@ process *find_process(pid_t pid) {
   if (amp) {
     int i = (int)(amp - inputString);
     p->background = true;
+    printf("%s\n", "Process marked background");
     char *old_string = inputString;
     inputString = malloc(sizeof(char)*(i+1));
     inputString[i] = '\0';
@@ -268,11 +269,10 @@ void run_program(tok_t *t, char *s) {
       if (proc->background) {
         put_process_in_background(proc, false);
       } else {
-        put_process_in_foreground(proc, false);  
+        put_process_in_foreground(proc, false);
       }
     }
   }
-  
 }
 
 int shell (int argc, char *argv[]) {
