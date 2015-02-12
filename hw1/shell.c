@@ -77,13 +77,13 @@ int manage_process(tok_t arg[], bool foreground) {
     if (pid == 0) printf("most recently launched.\n");
     else printf("%d.\n", pid);
   } else {
+    p->stopped = false;
     if (foreground) {
       p->background = false;
-      p->stopped = false;
       put_process_in_foreground(p, true);
     } else {
       p->background = true;
-      put_process_in_background(p, false);
+      put_process_in_background(p, true);
     }
   }
   return 1;
