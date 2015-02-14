@@ -133,7 +133,7 @@ void put_process_in_foreground (process *p, int cont) {
   tcsetpgrp(shell_terminal, p->pid);
   if (cont) {
     tcsetattr(shell_terminal, TCSADRAIN, &p->tmodes);
-    if (kill(- p->pid, SIGCONT) < 0) {
+    if (kill(p->pid, SIGCONT) < 0) {
       perror("kill (SIGCONT)");
     }
   }
@@ -151,7 +151,7 @@ void put_process_in_foreground (process *p, int cont) {
  * the process group a SIGCONT signal to wake it up. */
 void put_process_in_background (process *p, int cont) {
   if (cont) {
-    if (kill(- p->pid, SIGCONT) < 0) {
+    if (kill(p->pid, SIGCONT) < 0) {
       perror("kill (SIGCONT)");
     }
     printf("PID: %d in background.\n", p->pid);

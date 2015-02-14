@@ -30,10 +30,8 @@ process *find_process(pid_t pid);
 
 
 int cmd_quit(tok_t arg[]) {
-  if (!first_process) {
-    printf("Bye\n");
-    exit(0);
-  }
+  printf("Bye\n");
+  exit(0);
   return 1;
 }
 
