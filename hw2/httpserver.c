@@ -28,6 +28,8 @@ char *server_files_directory;
 char *server_proxy_hostname;
 int server_proxy_port;
 
+int asprintf(char **strp, const char *fmt, ...);
+
 char *read_file(char *path, size_t *file_size) {
   long size;
   char *file_contents;
@@ -58,6 +60,42 @@ void respond_with_400(int fd) {
   http_send_header(fd, "Content-type", "text/html");
   http_end_headers(fd);
   http_send_string(fd, "<center><h1>400</h1><hr><p>Bad Request.</p></center>");
+}
+
+void respond_with_directory(int fd, char *path) {
+  DIR *dp;
+  struct dirent *ep;
+  dp = opendir(path);
+  
+  if (dp != NULL) {
+    // de-resolve the path
+    if (path[0] == '.' && path[1] == '/') path = path + 1;
+
+    http_start_response(fd, 200);
+    http_send_header(fd, "Content-type", "text/html");
+    http_end_headers(fd);
+
+    // build header
+    char *header;
+    asprintf(&header, "<h1>Index of %s</h1><hr>", path);
+    http_send_string(fd, header);
+    free(header);
+
+    while ((ep = readdir(dp))) {
+      if (strcmp(ep->d_name, ".") != 0) {  
+        char *link_item;
+        if (strcmp(ep->d_name, "..") == 0) {
+          asprintf(&link_item, "<a href=\"../\">Parent directory</a><br>", path);
+          http_send_string(fd, link_item);
+        } else {
+          asprintf(&link_item, "<a href=\"%s/%s\">%s</a><br>", path, ep->d_name, ep->d_name);
+          http_send_string(fd, link_item);
+        }
+        free(link_item);
+      }
+    }
+    closedir(dp);
+  }
 }
 
 /*
@@ -119,9 +157,11 @@ void handle_files_request(int fd)
       http_send_string(fd, file_content);
     } else {
       // return directory in links
-      printf("no index found\n");
+      respond_with_directory(fd, request->path);
     }
+    free(path_with_index_html);
   }
+  free(resolved_path);
 }
 
 /*
