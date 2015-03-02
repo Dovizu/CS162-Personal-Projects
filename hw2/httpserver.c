@@ -42,7 +42,7 @@ char *read_file(char *path, size_t *file_size) {
   file_contents = malloc(size * (sizeof(char)));
   fread(file_contents, sizeof(char), size, file);
   fclose(file);
-  *file_size = (size_t)size;
+  if (file_size) *file_size = (size_t)size;
   return file_contents;
 }
 
@@ -83,7 +83,9 @@ void handle_files_request(int fd)
     exit(1);
   }
   /* resolve path */
-  request->path = ((char *)request->path)+1;
+  char *resolved_path;
+  asprintf(&resolved_path, ".%s", request->path);
+  request->path = resolved_path;
   /* determine file status */
   struct stat sb;
   /* Not found for various reasons */
@@ -103,9 +105,22 @@ void handle_files_request(int fd)
     http_send_data(fd, file_content, file_size);
   }
 
-  /* requested path is a regular file */
+  /* requested path is a directory */
   if (S_ISDIR(sb.st_mode)) {
-    
+    char *path_with_index_html;
+    asprintf(&path_with_index_html, "%s/index.html", request->path);
+
+    if (access(path_with_index_html, F_OK) != -1) {
+      // index.html exists
+      char *file_content = read_file(path_with_index_html, NULL);
+      http_start_response(fd, 200);
+      http_send_header(fd, "Content-type", "text/html");
+      http_end_headers(fd);
+      http_send_string(fd, file_content);
+    } else {
+      // return directory in links
+      printf("no index found\n");
+    }
   }
 }
 
