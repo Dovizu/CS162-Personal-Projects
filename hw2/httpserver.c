@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 #include "libhttp.h"
 
@@ -175,11 +176,124 @@ void handle_files_request(int fd)
  *   | client | <-> | httpserver | <-> | proxy target |
  *   +--------+     +------------+     +--------------+
  */
+void* thread_handle_incoming(void *);
+void* thread_handle_outgoing(void *);
+struct endpoints {
+  /* data */
+  int server_socket_number;
+  int fd;
+};
+
 void handle_proxy_request(int fd)
 {
+  char *hostname = server_proxy_hostname;
+  int port = server_proxy_port;
+  struct hostent *server;
+  int socket_number;
+  struct sockaddr_in serv_addr;
 
-  /* YOUR CODE HERE */
+  // get ip address
+  if ((server = gethostbyname(hostname)) == NULL) {
+    fprintf(stderr, "ERROR: no such host\n");
+    exit(0);
+  }
+  // open socket
+  socket_number = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_number < 0) {
+    fprintf(stderr, "Failed to create a new socket: error %d: %s\n", errno, strerror(errno));
+    exit(errno);
+  }
+  bzero((char *) &serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  bcopy((char *) server->h_addr, 
+    (char *) &serv_addr.sin_addr.s_addr, 
+    server->h_length);
+  serv_addr.sin_port = htons(port);
 
+  if (connect(socket_number, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+    fprintf(stderr, "ERROR connecting\n");
+  }
+
+  fd_set rwfds;
+  struct timeval tv;
+  int retval;
+  int maxp;
+  if (socket_number > fd) {
+    maxp = socket_number + 1;
+  } else {
+    maxp = fd + 1;
+  }
+  tv.tv_sec = 5;
+  tv.tv_usec = 0;
+  char buffer[256];
+  while (1) {
+    FD_ZERO(&rwfds);
+    FD_SET(fd, &rwfds);
+    FD_SET(socket_number, &rwfds);
+
+    retval = select(maxp, &rwfds, NULL, NULL, &tv);
+    if (retval == 0) {
+      printf("Request timeout\n");
+    } else if (FD_ISSET(fd, &rwfds)) {
+      read(fd, buffer, 225);
+      write(socket_number, buffer, strlen(buffer));
+    } else if (FD_ISSET(socket_number, &rwfds)) {
+      read(socket_number, buffer, 225);
+      write(fd, buffer, strlen(buffer));
+    }
+  }
+  
+  // pthread_t incoming, outgoing;
+  // struct endpoints args;
+  // args.server_socket_number = socket_number;
+
+  // pthread_create(&outgoing, NULL, thread_handle_outgoing, &args);
+  // pthread_create(&incoming, NULL, thread_handle_incoming, &args);
+  // pthread_join(incoming, NULL);
+  // pthread_join(outgoing, NULL);
+  // exit(1);
+}
+
+void* thread_handle_incoming(void *argument) {
+  int ssn = ((struct endpoints *) argument)->server_socket_number;
+  int fd = ((struct endpoints *) argument)->fd;
+  char buffer[256];
+  int n;
+  while(1) {
+    n = read(ssn, buffer, 225);
+    if (n < 0) {
+      printf("Error reading from ssn\n");
+      exit(errno);
+    }
+    printf("received from server: %s\n", buffer);
+    n = write(fd, buffer, strlen(buffer));
+    if (n < 0) {
+      printf("Error writing to fd\n");
+      exit(errno);
+    }
+    bzero(buffer, 256);
+  }
+}
+
+void* thread_handle_outgoing(void *argument) {
+  int ssn = ((struct endpoints *) argument)->server_socket_number;
+  int fd = ((struct endpoints *) argument)->fd;
+  char buffer[256];
+  int n;
+  while(1) {
+    n = read(fd, buffer, 225);
+    if (n < 0) {
+      printf("Error reading from fd\n");
+      exit(errno);
+    }
+    printf("received from client: %s\n", buffer);
+    n = write(ssn, buffer, strlen(buffer));
+    if (n < 0) {
+      printf("Error writing to ssn\n");
+      exit(errno);
+    }
+    bzero(buffer, 256);
+  }
 }
 
 /*
