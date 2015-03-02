@@ -49,7 +49,7 @@ char *read_file(char *path, size_t *file_size) {
 }
 
 void respond_with_404(int fd) {
-  http_start_response(fd, 400);
+  http_start_response(fd, 404);
   http_send_header(fd, "Content-type", "text/html");
   http_end_headers(fd);
   http_send_string(fd, "<center><h1>404</h1><hr><p>Not Found.</p></center>");
