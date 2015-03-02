@@ -28,6 +28,38 @@ char *server_files_directory;
 char *server_proxy_hostname;
 int server_proxy_port;
 
+char *read_file(char *path, size_t *file_size) {
+  long size;
+  char *file_contents;
+  FILE *file = fopen(path, "rb");
+  if (!file) {
+    fprintf(stderr, "Can't open the specified file %s\n", path);
+    exit(1);
+  }
+  fseek(file, 0, SEEK_END);
+  size = ftell(file);
+  rewind(file);
+  file_contents = malloc(size * (sizeof(char)));
+  fread(file_contents, sizeof(char), size, file);
+  fclose(file);
+  *file_size = (size_t)size;
+  return file_contents;
+}
+
+void respond_with_404(int fd) {
+  http_start_response(fd, 400);
+  http_send_header(fd, "Content-type", "text/html");
+  http_end_headers(fd);
+  http_send_string(fd, "<center><h1>404</h1><hr><p>Not Found.</p></center>");
+}
+
+void respond_with_400(int fd) {
+  http_start_response(fd, 400);
+  http_send_header(fd, "Content-type", "text/html");
+  http_end_headers(fd);
+  http_send_string(fd, "<center><h1>400</h1><hr><p>Bad Request.</p></center>");
+}
+
 /*
  * Reads an HTTP request from stream (fd), and writes an HTTP response
  * containing:
@@ -43,14 +75,38 @@ void handle_files_request(int fd)
 {
 
   /* YOUR CODE HERE */
-
   struct http_request *request = http_request_parse(fd);
+  
+  /* http requests must start with a leading slash */
+  if (request->path[0] != '/') {
+    respond_with_400(fd);
+    exit(1);
+  }
+  /* resolve path */
+  request->path = ((char *)request->path)+1;
+  /* determine file status */
+  struct stat sb;
+  /* Not found for various reasons */
+  if (stat(request->path, &sb) == -1) {
+    respond_with_404(fd);
+    exit(EXIT_SUCCESS);
+  }
+  /* requested path is a regular file */
+  if (S_ISREG(sb.st_mode)) {
+    char *mime_type = http_get_mime_type(request->path);
+    size_t file_size;
+    char *file_content = read_file(request->path, &file_size);
 
-  http_start_response(fd, 200);
-  http_send_header(fd, "Content-type", "text/html");
-  http_end_headers(fd);
-  http_send_string(fd, "<center><h1>Welcome to httpserver!</h1><hr><p>Nothing's here yet.</p></center>");
+    http_start_response(fd, 200);
+    http_send_header(fd, "Content-type", mime_type);
+    http_end_headers(fd);
+    http_send_data(fd, file_content, file_size);
+  }
 
+  /* requested path is a regular file */
+  if (S_ISDIR(sb.st_mode)) {
+    
+  }
 }
 
 /*
