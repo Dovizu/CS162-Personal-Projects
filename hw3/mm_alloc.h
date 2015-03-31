@@ -28,11 +28,11 @@ typedef struct s_block *s_block_ptr;
 
 /* block struct */
 struct s_block {
-    size_t size;
     struct s_block *next;
     struct s_block *prev;
     int free;
     void *ptr;
+    size_t size;
     /* A pointer to the allocated block */
     char data[1];
  };
