@@ -137,12 +137,15 @@ void split_block(s_block_ptr b, size_t s) {
     s_block_ptr new_block;
     new_block = (s_block_ptr)(b->data + s);
     new_block->size = b->size - (s + s_block_size);
-    new_block->free = true;
     new_block->ptr = new_block->data;
-    b->size = s;
-    new_block->next = b->next;
+    new_block->free = true;
     new_block->prev = b;
+    new_block->next = b->next;
+    b->size = s;
     b->next = new_block;
+    if (new_block->next) {
+        new_block->next->prev = new_block;    
+    }
 }
 
 // private
