@@ -162,7 +162,10 @@ s_block_ptr fusion(s_block_ptr brk) {
 }
 
 s_block_ptr get_block (void *p) {
-    return (p - s_block_size);
+    char *save;
+    save = p;
+    save -= s_block_size;
+    return (p = save);
 }
 
 void mm_memcpy(s_block_ptr source, s_block_ptr dest) {
