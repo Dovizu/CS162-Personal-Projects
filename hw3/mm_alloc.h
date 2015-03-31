@@ -36,6 +36,8 @@ struct s_block {
     char data [0];
  };
 
+ static s_block_ptr root;
+
 /* Split block according to size, b must exist */
 void split_block (s_block_ptr b, size_t s);
 

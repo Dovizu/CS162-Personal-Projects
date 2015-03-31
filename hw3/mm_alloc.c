@@ -9,32 +9,58 @@
 
 #include <stdlib.h>
 
-/* Your final implementation should comment out this macro. */
-// #define MM_USE_STUBS
-
-void* mm_malloc(size_t size)
-{
-#ifdef MM_USE_STUBS
-    return calloc(1, size);
-#else
-#error Not implemented.
-#endif
+int convert_to_4_aligned(int size) {
+    return (((((size)-1)>>2)<<2)+4);
 }
 
-void* mm_realloc(void* ptr, size_t size)
-{
-#ifdef MM_USE_STUBS
-    return realloc(ptr, size);
-#else
-#error Not implemented.
-#endif
+void* mm_malloc(size_t size) {
+
 }
 
-void mm_free(void* ptr)
-{
-#ifdef MM_USE_STUBS
-    free(ptr);
-#else
-#error Not implemented.
-#endif
+void* mm_realloc(void* ptr, size_t size) {
+
+}
+
+void mm_free(void* ptr) {
+
+}
+
+void split_block(s_block_ptr b, size_t s) {
+
+}
+
+// private
+
+s_block_ptr fusion(s_block_ptr b) {
+
+}
+
+s_block_ptr get_block (void *p) {
+
+}
+
+s_block_ptr extend_heap (s_block_ptr last , size_t s) {
+    s_block_ptr brk = sbrk(0); // get old break
+    size_t block_size = sizeof(struct s_block);
+    if (sbrk(block_size + s) == (void *)-1) {
+        // fail case
+        return NULL
+    }
+    brk->size = s;
+    brk->next = NULL;
+    if (last) {
+        brk->prev = last;
+        last->next = brk;
+    }
+    brk->free = 0;
+    return brk;
+}
+
+s_block_ptr find_block(s_block_ptr *last, size_t size) {
+    s_block_ptr b = root;
+    while (b && !(b->free && b->size >= size)) {
+        *last = b;
+        b = b->next;
+    }
+    return b;
 }
