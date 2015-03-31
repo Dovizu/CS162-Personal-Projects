@@ -90,7 +90,7 @@ void mm_free(void* ptr) {
         if (block->prev && block->prev->free) {
             block = fusion(block->prev);
         }
-        if (block->next) {
+        if (block->next && block->next->free) {
             fusion(block);
         } else {
             if (block->prev) {
