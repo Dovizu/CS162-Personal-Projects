@@ -10,8 +10,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+s_block_ptr get_block (void *p);
+
 int convert_to_4_aligned(int size) {
     return (((((size)-1)>>2)<<2)+4);
+}
+
+bool address_is_valid(void *ptr) {
+    if (root && ptr > root && ptr < sbrk(0)) {
+        return (ptr == (get_block(ptr))->ptr);
+    }
+    return NULL;
 }
 
 s_block_ptr extend_heap (s_block_ptr last , size_t s) {
@@ -102,6 +111,6 @@ s_block_ptr fusion(s_block_ptr brk) {
 }
 
 s_block_ptr get_block (void *p) {
-
+    return (p - s_block_size);
 }
 
