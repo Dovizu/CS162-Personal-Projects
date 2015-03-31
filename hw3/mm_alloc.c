@@ -120,7 +120,7 @@ void mm_free(void* ptr) {
         if (block->prev && block->prev->free) {
             block = fusion(block->prev);
         }
-        if (block->next && block->next->free) {
+        if (block->next) {
             fusion(block);
         } else {
             if (block->prev) {
