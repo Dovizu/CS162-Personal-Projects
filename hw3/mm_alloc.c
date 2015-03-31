@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 s_block_ptr get_block (void *p);
+void mm_memcpy(s_block_ptr source, s_block_ptr dest);
 
 int convert_to_4_aligned(int size) {
     return (((((size)-1)>>2)<<2)+4);
@@ -79,7 +80,36 @@ void* mm_malloc(size_t size) {
 }
 
 void* mm_realloc(void* ptr, size_t size) {
-    
+    if (!ptr) {
+        return (mm_malloc(size));
+    }
+    if (address_is_valid(ptr)) {
+        size_t s = convert_to_4_aligned(size);
+        s_block_ptr block = get_block(ptr);
+        if (block->size >= s) {
+            if (block->size - s >= (s_block_size + 4)) {
+                split_block(block, s);
+            }
+        } else {
+            if (block->next && block->next->free && (block->size + s_block_size + block->next->size) >= s) {
+                fusion(block);
+                if (block->size - s >= (s_block_size + 4)) {
+                    split_block(block, s);
+                }
+            } else {
+                s_block_ptr new_ptr = malloc(s);
+                if (!new_ptr) {
+                    return NULL;
+                }
+                s_block_ptr bp = get_block(new_ptr);
+                mm_memcpy(block, bp);
+                free(ptr);
+                return new_ptr;
+            }
+        }
+        return ptr;
+    }
+    return NULL;
 }
 
 void mm_free(void* ptr) {
