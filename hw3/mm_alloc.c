@@ -17,7 +17,8 @@ s_block_ptr get_block (void *p);
 void mm_memcpy(s_block_ptr source, s_block_ptr dest);
 
 int convert_to_4_aligned(int size) {
-    return (((((size)-1)>>2)<<2)+4);
+    // return (((((size)-1)>>2)<<2)+4);
+    return size;
 }
 
 bool address_is_valid(void *ptr) {
