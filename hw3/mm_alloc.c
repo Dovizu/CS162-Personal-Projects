@@ -90,8 +90,15 @@ void split_block(s_block_ptr b, size_t s) {
 
 // private
 
-s_block_ptr fusion(s_block_ptr b) {
-
+s_block_ptr fusion(s_block_ptr brk) {
+    if (brk->next && brk->next->free) {
+        brk->size += s_block_size + brk->next->size;
+        brk->next = brk->next->next;
+        if (brk->next) {
+            brk->next->prev = brk;    
+        }
+    }
+    return brk;
 }
 
 s_block_ptr get_block (void *p) {
