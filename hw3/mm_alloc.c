@@ -79,7 +79,7 @@ void* mm_malloc(size_t size) {
 }
 
 void* mm_realloc(void* ptr, size_t size) {
-
+    
 }
 
 void mm_free(void* ptr) {
@@ -129,5 +129,14 @@ s_block_ptr fusion(s_block_ptr brk) {
 
 s_block_ptr get_block (void *p) {
     return (p - s_block_size);
+}
+
+void mm_memcpy(s_block_ptr source, s_block_ptr dest) {
+    int *source_d = source->ptr;
+    int *dest_d = dest->ptr;
+    size_t i;
+    for (i = 0; 4*i < source->size && 4*i < dest->size; ++i) {
+        dest_d[i] = source_d[i];
+    }
 }
 
