@@ -17,7 +17,7 @@ int convert_to_4_aligned(int size) {
 }
 
 bool address_is_valid(void *ptr) {
-    if (root && ptr > root && ptr < sbrk(0)) {
+    if (root && (s_block_ptr)ptr > root && (s_block_ptr)ptr < (s_block_ptr)sbrk(0)) {
         return (ptr == (get_block(ptr))->ptr);
     }
     return NULL;
@@ -83,7 +83,24 @@ void* mm_realloc(void* ptr, size_t size) {
 }
 
 void mm_free(void* ptr) {
-
+    s_block_ptr block;
+    if (address_is_valid(ptr)) {
+        block = get_block(ptr);
+        block->free = true;
+        if (block->prev && block->prev->free) {
+            block = fusion(block->prev);
+        }
+        if (block->next) {
+            fusion(block);
+        } else {
+            if (block->prev) {
+                block->prev->next = NULL;
+            } else {
+                root = NULL;
+            }
+            brk(block);
+        }
+    }
 }
 
 void split_block(s_block_ptr b, size_t s) {
