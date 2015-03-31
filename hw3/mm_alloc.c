@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+s_block_ptr root = NULL;
+size_t s_block_size = 20;
+
 s_block_ptr get_block (void *p);
 void mm_memcpy(s_block_ptr source, s_block_ptr dest);
 
@@ -26,15 +29,15 @@ bool address_is_valid(void *ptr) {
 
 s_block_ptr extend_heap (s_block_ptr last , size_t s) {
     s_block_ptr brk = sbrk(0); // get old break
-    size_t block_size = s_block_size;
-    if (sbrk(block_size + s) == (void *)-1) {
+    if ((int)sbrk(s_block_size + s) < 0) {
         // fail case
         return NULL;
     }
     brk->size = s;
     brk->next = NULL;
+    brk->prev = last;
+    brk->ptr = brk->data;
     if (last) {
-        brk->prev = last;
         last->next = brk;
     }
     brk->free = 0;
