@@ -17,6 +17,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <unistd.h>
 
 void* mm_malloc(size_t size);
 void* mm_realloc(void* ptr, size_t size);
@@ -33,10 +34,11 @@ struct s_block {
     int free;
     void *ptr;
     /* A pointer to the allocated block */
-    char data [0];
+    char data[1];
  };
 
- static s_block_ptr root;
+ static s_block_ptr root = NULL;
+ static size_t s_block_size = 24;
 
 /* Split block according to size, b must exist */
 void split_block (s_block_ptr b, size_t s);
